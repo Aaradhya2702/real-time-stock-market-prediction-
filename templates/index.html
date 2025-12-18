@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Stock Prediction Dashboard</h1>
+        </header>
+
+        <section class="form-section">
+            <form id="stock-form">
+                <label for="stock_name">Enter Stock Symbol:</label>
+                <input type="text" id="stock_name" name="stock_name" placeholder="e.g., AAPL, RELIANCE" required>
+                <button type="submit" class="btn">Get Predictions</button>
+            </form>
+        </section>
+
+        <section class="output-section">
+            <h2>Prediction Results</h2>
+            <div id="results"></div>
+        </section>
+    </div>
+
+    <script>
+        const form = document.getElementById("stock-form");
+        const resultsDiv = document.getElementById("results");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const stockName = document.getElementById("stock_name").value;
+
+            resultsDiv.innerHTML = `<p>Fetching predictions for ${stockName}...</p>`;
+
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ stock_name: stockName })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    resultsDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                } else {
+                    const resultsHTML = data.predictions
+                        .map(item => `<p>Day ${item.Day}: <strong>${item['Predicted Price']}</strong></p>`)
+                        .join("");
+                    resultsDiv.innerHTML = resultsHTML;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p style="color: red;">An error occurred while fetching predictions.</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
